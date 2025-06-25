@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File to Text Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #F0F8FF;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .header .highlight {
+            color: #007bff;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .upload-section,
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px dashed #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 60px 20px;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            background: #f8f9ff;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #0056b3;
+            background: #f0f4ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #0056b3;
+            background: #e6f0ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 60px;
+            height: 60px;
+            background: #007bff;
+            border-radius: 12px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .choose-file-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .choose-file-btn:hover {
+            background: #0056b3;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #ffc107;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .file-size {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #f8d7da;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: #0056b3;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .preview-section {
+            border-color: #007bff;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .preview-title {
+            color: #007bff;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+
+        .preview-content {
+            min-height: 400px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .empty-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: #999;
+        }
+
+        .empty-preview img {
+            width: 300px;
+            height: 200px;
+            margin-bottom: 10px;
+        }
+
+        .browser-mockup {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .browser-header {
+            display: flex;
+            align-items: center;
+            background: #495057;
+            padding: 10px 15px;
+            border-radius: 6px 6px 0 0;
+            margin: -20px -20px 15px -20px;
+        }
+
+        .browser-dots {
+            display: flex;
+            gap: 5px;
+            margin-right: 15px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fd5e53;
+        }
+
+        .dot:nth-child(2) {
+            background: #ffbd2e;
+        }
+
+        .dot:nth-child(3) {
+            background: #27ca3f;
+        }
+
+        .url-bar {
+            flex: 1;
+            background: #6c757d;
+            height: 24px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .click-here-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .image-placeholder {
+            width: 80px;
+            height: 60px;
+            background: #007bff;
+            border-radius: 4px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .image-placeholder::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 2px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .extracted-content {
+            display: none;
+        }
+
+        .content-section {
+            margin-bottom: 20px;
+            padding: 0px;
+            background: none;
+            border-left: none;
+        }
+
+        .content-section h3 {
+            color: #007bff;
+            font-weight: bold;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+
+        .content-section p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .content-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .content-section li::before {
+            content: "- ";
+        }
+
+
+        .highlight-key {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .date-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .date-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .contact-info {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .upload-section,
+            .preview-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span class="highlight">Intelligent Document Analyzer:</span> Extract & Process Text with AI</h1>
+            <p>Our AI doesn't just extract text—it identifies key information, categorizes content, and delivers
+                structured data you can use.</p>
+        </div>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                    </div>
+                    <div class="upload-text">Drag & Drop Files Here</div>
+                    <div class="upload-subtext">Or</div>
+                    <!-- <button class="btn" id="choose-file-btn">Choose File</button> -->
+                    <button class="choose-file-btn" onclick="document.getElementById('fileInput').click()">Choose
+                        File</button>
+                    <input type="file" id="fileInput" class="file-input"
+                        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif" multiple>
+                </div>
+
+                <div id="fileList"></div>
+
+                <button class="submit-btn" id="submitBtn" disabled>Submit And Extract</button>
+            </div>
+
+            <div class="preview-section">
+                <div class="preview-header">
+                    <div class="preview-title">Preview</div>
+                    <div class="preview-actions">
+                        <button class="action-btn" id="downloadBtn" style="display: none;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+                            </svg>
+                        </button>
+                        <button class="action-btn" id="copyBtn" style="display: none;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="preview-content">
+                    <div class="empty-preview" id="emptyPreview">
+                        <img src="../static/preview-icon.png" alt="Preview">
+                        <h3 style="color: #007bff; margin-bottom: 10px;">Preview will be available here</h3>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Processing your file...</p>
+                    </div>
+
+                    <div class="extracted-content" id="extractedContent"></div>
+                </div>
+
+                <!-- <div class="browser-mockup">
+                            <div class="browser-header">
+                                <div class="browser-dots">
+                                    <div class="dot"></div>
+                                    <div class="dot"></div>
+                                    <div class="dot"></div>
+                                </div>
+                                <div class="url-bar"></div>
+                            </div>
+                            <button class="click-here-btn">Click Here ✂️</button>
+                            <div class="image-placeholder"></div>
+                        </div> -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+
+        // File input and drag & drop handlers
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            addFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            console.log("hii", e.target.files)
+            const files = e.target.files;
+            addFiles(files);
+        }
+
+        function addFiles(files) {
+            selectedFiles[0] = files[0]
+            // files.forEach(file => {
+            //     if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+            //         selectedFiles.push(file);
+            //     }
+            // });
+            updateFileList();
+            updateSubmitButton();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            updateSubmitButton();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+
+                const fileExtension = file.name.split('.').pop().toUpperCase();
+                const fileSize = formatFileSize(file.size);
+
+                fileItem.innerHTML = `
+                    <div class="file-icon">${fileExtension}</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${fileSize}</div>
+                    </div>
+                    <button class="delete-btn" onclick="removeFile(${index})">🗑️</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function updateSubmitButton() {
+            submitBtn.disabled = selectedFiles.length === 0;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Submit and extract functionality
+        submitBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+
+            showLoading();
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('file', file);
+            });
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const result = await response.json();
+                displayExtractedContent(result);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to process file. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        function showLoading() {
+            document.getElementById('emptyPreview').style.display = 'none';
+            document.getElementById('extractedContent').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            const extractedContent = document.getElementById('extractedContent');
+            extractedContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #dc3545;">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+            extractedContent.style.display = 'block';
+        }
+        function displayExtractedContent(response) {
+            const extractedContent = document.getElementById('extractedContent');
+            let html = '';
+
+            // Extract the structured_data from the response
+            const data = response.structured_data;
+
+            // Check if structured_data exists
+            if (!data) {
+                html = '<div class="content-section"><p>No structured data found in response.</p></div>';
+                extractedContent.innerHTML = html;
+                return;
+            }
+
+            // Title
+            if (data.title) {
+                html += `
+            <div class="content-section">
+                <h3><span class="highlight-key">Title:</span></h3>
+                <p>${data.title}</p>
+            </div>
+        `;
+
+            }
+
+            // Summary
+            if (data.summary) {
+                html += `
+            <div class="content-section">
+                <h3><span class="highlight-key">Summary:</span></h3>
+                <p>${data.summary}</p>
+            </div>
+        `;
+            }
+
+            // Eligibility Criteria
+            if (data.eligibility_criteria && data.eligibility_criteria.length > 0) {
+                html += `
+            <div class="content-section">
+                <h3><span class="highlight-key">Eligibility Criteria:</span></h3>
+                <ul>
+                    ${data.eligibility_criteria.map(criteria => `<li>${criteria}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+            }
+
+            // Key Dates
+            if (data.key_dates) {
+                html += `
+            <div class="content-section">
+                <h3><span class="highlight-key">Key Dates:</span></h3>
+                <div class="date-info">
+        `;
+
+                Object.entries(data.key_dates).forEach(([key, value]) => {
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    html += `<div class="date-item"><strong>${formattedKey}:</strong> ${value ? value : "Not Mentioned"}</div>`;
+
+                });
+
+                html += `
+                </div>
+            </div>
+        `;
+            }
+
+            // Key Points
+            if (data.key_points && data.key_points.length > 0) {
+                html += `
+            <div class="content-section">
+                <h3><span class="highlight-key">Key Points:</span></h3>
+                <ul>
+                    ${data.key_points.map(point => `<li>${point}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+            }
+
+            // Contact Info - Fixed to handle string format
+            if (data.contact_info) {
+                console.log(data.contact_info)
+                html += `
+            <div class="content-section">
+                <h3><span class="highlight-key">Contact Information:</span></h3>
+                <div class="date-info">
+        `;
+
+                Object.entries(data.contact_info).forEach(([key, value]) => {
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    html += `<div class="date-item"><strong>${formattedKey}:</strong> ${value ? value : "Not Mentioned"}</div>`;
+
+                });
+
+                html += `
+                </div>
+            </div>
+        `;
+            }
+            // if (data.contact_info && data.contact_info.length > 0) {
+            //     console.log(data.contact_info)
+            //     html += `
+            //         <div class="content-section">
+            //             <h3><span class="highlight-key">Contact Information:</span></h3>
+            //             <div class="contact-info">
+            //                  ${data?.contact_info?.map(point => `<li>${point}</li>`).join('')}
+
+            //             </div>
+            //         </div>
+            //     `;
+            // }
+
+            // Handle any other dynamic fields
+            Object.entries(data).forEach(([key, value]) => {
+                if (!['title', 'summary', 'eligibility_criteria', 'key_dates', 'key_points', 'contact_info'].includes(key)) {
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    html += `
+                <div class="content-section">
+                    <h3><span class="highlight-key">${formattedKey}:</span></h3>
+            `;
+
+                    if (Array.isArray(value)) {
+                        html += `<ul>${value.map(item => `<li>${item}</li>`).join('')}</ul>`;
+                    } else if (typeof value === 'object' && value !== null) {
+                        Object.entries(value).forEach(([subKey, subValue]) => {
+                            const formattedSubKey = subKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            html += `<p><strong>${formattedSubKey}:</strong> ${subValue}</p>`;
+                        });
+                    } else {
+                        html += `<p>${value}</p>`;
+                    }
+
+                    html += `</div>`;
+                }
+            });
+
+            extractedContent.innerHTML = html;
+            extractedContent.style.display = 'block';
+
+            // Show action buttons
+            document.getElementById('downloadBtn').style.display = 'block';
+            document.getElementById('copyBtn').style.display = 'block';
+        }
+
+        // Copy and download functionality
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const content = document.getElementById('extractedContent').innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('Content copied to clipboard!');
+            });
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const content = document.getElementById('extractedContent').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'extracted_content.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+
+</html>
